@@ -1,0 +1,66 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the Bank Marketing dataset
+file_path = '/Users/11b51/Downloads/bank+marketing/bank/bank-full.csv'  # Update this path
+df = pd.read_csv(file_path, sep=';')  # Use semicolon as the separator
+
+# Preview the dataset
+print("Dataset Preview:")
+print(df.head())
+
+# Data Preprocessing
+
+# Check for missing values
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+
+# Convert categorical variables to numeric using one-hot encoding
+df = pd.get_dummies(df, drop_first=True)
+
+# Define features and target variable
+X = df.drop('y_yes', axis=1)  # Features (drop target variable)
+y = df['y_yes']                # Target variable (1 if customer purchased, 0 otherwise)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Create and train the Decision Tree Classifier
+dt_classifier = DecisionTreeClassifier(random_state=42)
+dt_classifier.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred = dt_classifier.predict(X_test)
+
+# Evaluate the model
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Purchased', 'Purchased'], yticklabels=['Not Purchased', 'Purchased'])
+plt.title('Confusion Matrix')
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.show()
+
+# Feature Importance
+importance = dt_classifier.feature_importances_
+feature_names = X.columns
+feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': importance})
+
+# Sort the feature importance in descending order
+feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
+
+# Plot feature importance
+plt.figure(figsize=(12, 8))
+sns.barplot(x='Importance', y='Feature', data=feature_importance_df)
+plt.title('Feature Importance in Decision Tree Classifier')
+plt.show()
